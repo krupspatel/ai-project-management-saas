@@ -17,8 +17,11 @@ export default function DashboardPage() {
         </div>
 
         <StatsCards />
+
         <RecentProjects />
+
         <TaskBoard />
+
         <AIPlanner />
       </div>
     </DashboardShell>

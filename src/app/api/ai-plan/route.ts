@@ -1,40 +1,60 @@
-import OpenAI from 'openai';
-import { NextResponse } from 'next/server';
+import { GoogleGenAI } from '@google/genai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
 export async function POST(request: Request) {
   try {
-    const { idea } = await request.json();
+    const body = await request.json();
+    const idea = body.idea;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
+    if (!idea || !idea.trim()) {
+      return Response.json(
         {
-          role: 'system',
-          content:
-            'You are an expert software project manager. Create structured project plans.',
+          success: false,
+          error: 'Project idea is required',
         },
-        {
-          role: 'user',
-          content: idea,
-        },
-      ],
+        { status: 400 },
+      );
+    }
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.6-flash',
+      contents: `
+You are an expert project manager and software architect.
+
+Create a practical project plan for the following project:
+
+${idea}
+
+Include:
+
+1. Project Overview
+2. Main Features
+3. Recommended Tech Stack
+4. Project Milestones
+5. Development Tasks
+6. Suggested Timeline
+7. Potential Challenges
+
+Keep the plan clear, structured, and practical.
+`,
     });
 
-    return NextResponse.json({
-      plan: response.choices[0].message.content,
+    return Response.json({
+      success: true,
+      plan: response.text,
     });
   } catch (error) {
-    return NextResponse.json(
+    console.error('AI Error:', error);
+
+    return Response.json(
       {
-        error: 'Failed to generate plan',
+        success: false,
+        error: 'AI generation failed',
       },
-      {
-        status: 500,
-      },
+      { status: 500 },
     );
   }
 }
