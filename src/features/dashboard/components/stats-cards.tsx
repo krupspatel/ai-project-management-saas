@@ -1,42 +1,92 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { FolderKanban, CheckSquare, Sparkles, Users } from 'lucide-react';
 
-const stats = [
+type Stats = {
+  totalProjects: number;
+  activeTasks: number;
+  teamMembers: number;
+};
+
+const statsConfig = [
   {
     title: 'Total Projects',
-    value: '24',
+    key: 'totalProjects',
     icon: FolderKanban,
   },
   {
     title: 'Active Tasks',
-    value: '12',
+    key: 'activeTasks',
     icon: CheckSquare,
   },
   {
     title: 'AI Insights',
-    value: '86%',
+    value: 'Coming Soon',
     icon: Sparkles,
   },
   {
     title: 'Team Members',
-    value: '8',
+    key: 'teamMembers',
     icon: Users,
   },
 ];
 
 export function StatsCards() {
+  const [stats, setStats] = useState<Stats>({
+    totalProjects: 0,
+    activeTasks: 0,
+    teamMembers: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const response = await fetch('/api/dashboard/stats');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch stats');
+        }
+
+        const data: Stats = await response.json();
+
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to load dashboard stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStats();
+  }, []);
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat) => (
-        <div key={stat.title} className="rounded-xl border p-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">{stat.title}</p>
+      {statsConfig.map((stat) => {
+        const Icon = stat.icon;
 
-            <stat.icon size={20} />
+        const value =
+          'value' in stat
+            ? stat.value
+            : loading
+              ? '...'
+              : stats[stat.key as keyof Stats];
+
+        return (
+          <div key={stat.title} className="rounded-xl border p-6">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">{stat.title}</p>
+
+              <Icon size={20} />
+            </div>
+
+            <h3 className="mt-4 text-3xl font-bold">{value}</h3>
           </div>
-
-          <h3 className="mt-4 text-3xl font-bold">{stat.value}</h3>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

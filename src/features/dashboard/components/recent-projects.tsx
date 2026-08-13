@@ -33,7 +33,8 @@ export function RecentProjects() {
           throw new Error('Failed to fetch projects');
         }
 
-        const data = await response.json();
+        const data: Project[] = await response.json();
+
         setProjects(data);
       } catch (error) {
         console.error('Failed to load projects:', error);
@@ -43,6 +44,12 @@ export function RecentProjects() {
     }
 
     fetchProjects();
+
+    window.addEventListener('tasks-updated', fetchProjects);
+
+    return () => {
+      window.removeEventListener('tasks-updated', fetchProjects);
+    };
   }, []);
 
   return (
