@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -8,25 +12,39 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-const projects = [
-  {
-    name: 'AI CRM Platform',
-    status: 'In Progress',
-    progress: '65%',
-  },
-  {
-    name: 'Trading Dashboard',
-    status: 'Completed',
-    progress: '100%',
-  },
-  {
-    name: 'Healthcare SaaS',
-    status: 'Review',
-    progress: '80%',
-  },
-];
+type Project = {
+  id: string;
+  name: string;
+  status: string;
+  description: string | null;
+  progress: number;
+};
 
 export function RecentProjects() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const response = await fetch('/api/projects');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch projects');
+        }
+
+        const data = await response.json();
+        setProjects(data);
+      } catch (error) {
+        console.error('Failed to load projects:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProjects();
+  }, []);
+
   return (
     <div className="rounded-xl border">
       <div className="p-6">
@@ -43,17 +61,27 @@ export function RecentProjects() {
         </TableHeader>
 
         <TableBody>
-          {projects.map((project) => (
-            <TableRow key={project.name}>
-              <TableCell className="font-medium">{project.name}</TableCell>
-
-              <TableCell>
-                <Badge>{project.status}</Badge>
-              </TableCell>
-
-              <TableCell>{project.progress}</TableCell>
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={3}>Loading projects...</TableCell>
             </TableRow>
-          ))}
+          ) : projects.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={3}>No projects found.</TableCell>
+            </TableRow>
+          ) : (
+            projects.map((project) => (
+              <TableRow key={project.id}>
+                <TableCell className="font-medium">{project.name}</TableCell>
+
+                <TableCell>
+                  <Badge>{project.status}</Badge>
+                </TableCell>
+
+                <TableCell>{project.progress}%</TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>
