@@ -60,7 +60,11 @@ export function StatsCards() {
       }
     }
 
-    fetchStats();
+    window.addEventListener('project-created', fetchStats);
+
+    return () => {
+      window.removeEventListener('project-created', fetchStats);
+    };
   }, []);
 
   return (

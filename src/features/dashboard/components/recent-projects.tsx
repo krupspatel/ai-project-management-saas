@@ -46,9 +46,11 @@ export function RecentProjects() {
     fetchProjects();
 
     window.addEventListener('tasks-updated', fetchProjects);
+    window.addEventListener('project-created', fetchProjects);
 
     return () => {
       window.removeEventListener('tasks-updated', fetchProjects);
+      window.removeEventListener('project-created', fetchProjects);
     };
   }, []);
 

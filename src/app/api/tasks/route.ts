@@ -55,6 +55,15 @@ export async function POST(request: Request) {
         projectId: body.projectId,
         milestoneId: body.milestoneId ?? null,
       },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        milestone: true,
+      },
     });
 
     return NextResponse.json(task, { status: 201 });

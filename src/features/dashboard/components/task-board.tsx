@@ -18,10 +18,15 @@ type Task = {
   status: string;
   priority: string;
   projectId: string;
-  project: {
+  project?: {
     id: string;
     name: string;
   };
+};
+
+type Project = {
+  id: string;
+  name: string;
 };
 
 const columns = [
@@ -46,6 +51,39 @@ export function TaskBoard() {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [creatingTask, setCreatingTask] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [newTaskPriority, setNewTaskPriority] = useState('MEDIUM');
+
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const response = await fetch('/api/projects');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch projects');
+        }
+
+        const data: Project[] = await response.json();
+
+        setProjects(data);
+
+        if (data.length > 0) {
+          setSelectedProjectId(data[0].id);
+        }
+      } catch (error) {
+        console.error('Failed to load projects:', error);
+      }
+    }
+
+    fetchProjects();
+
+    window.addEventListener('project-created', fetchProjects);
+
+    return () => {
+      window.removeEventListener('project-created', fetchProjects);
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchTasks() {
@@ -84,11 +122,15 @@ export function TaskBoard() {
         },
         body: JSON.stringify({
           title: newTaskTitle,
-          projectId: 'cmsri99od00016szcgbyktjd4',
+          projectId: selectedProjectId,
           status: 'TODO',
-          priority: 'MEDIUM',
+          priority: newTaskPriority,
         }),
       });
+
+      if (!newTaskTitle.trim() || !selectedProjectId) {
+        return;
+      }
 
       if (!response.ok) {
         throw new Error('Failed to create task');
@@ -164,6 +206,28 @@ export function TaskBoard() {
                 placeholder="Task title"
                 className="w-full rounded-md border px-3 py-2 text-sm"
               />
+              <select
+                value={selectedProjectId}
+                onChange={(event) => setSelectedProjectId(event.target.value)}
+                className="w-full rounded-md border px-3 py-2 text-sm"
+              >
+                <option value="">Select project</option>
+
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={newTaskPriority}
+                onChange={(event) => setNewTaskPriority(event.target.value)}
+                className="w-full rounded-md border px-3 py-2 text-sm"
+              >
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+              </select>
 
               <Button
                 onClick={createTask}
@@ -202,7 +266,7 @@ export function TaskBoard() {
                       <div className="text-sm font-medium">{task.title}</div>
 
                       <div className="mt-1 text-xs text-muted-foreground">
-                        {task.project.name}
+                        {task.project?.name ?? 'Unknown Project'}
                       </div>
 
                       <div className="mt-2 text-xs text-muted-foreground">

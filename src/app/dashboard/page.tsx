@@ -3,6 +3,7 @@ import { StatsCards } from '@/features/dashboard/components/stats-cards';
 import { RecentProjects } from '@/features/dashboard/components/recent-projects';
 import { TaskBoard } from '@/features/dashboard/components/task-board';
 import { AIPlanner } from '@/features/ai-assistant/components/ai-planner';
+import { CreateProject } from '@/features/dashboard/components/create-project';
 
 export default function DashboardPage() {
   return (
@@ -15,6 +16,8 @@ export default function DashboardPage() {
             Manage your projects smarter with AI.
           </p>
         </div>
+
+        <CreateProject />
 
         <StatsCards />
 
